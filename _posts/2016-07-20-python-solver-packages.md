@@ -82,7 +82,7 @@ Two Python solver packages were installed and implemented to evaluate performanc
 
 * [CVXOPT](http://cvxopt.org){:target="blank"} was developed at MIT by J.Dahl, M.Anderson, and L. Vandenberghe beginning in 2004. The latest version was released in 2015.
 
-* [CVXPY](http://www.cvxpy.org/){:target="blank"} {% cite cvxpy %} was developed by Steven Diamond and Stephen Boyd. It was published in the Journal of Machine Learning Research. And actually it is not a solver in and of itself but rather transforms a problem into a standard form before calling a solver and ultimately deliveres the results from the solver in a standard form.
+* [CVXPY](http://www.cvxpy.org/){:target="blank"} was developed by Steven Diamond and Stephen Boyd. It was published in the Journal of Machine Learning Research. And actually it is not a solver in and of itself but rather transforms a problem into a standard form before calling a solver and ultimately deliveres the results from the solver in a standard form.
 
 All three solvers provided identical results. CVXOPT has a sophisticated constraint matrices setup and should be able to handle most any constraint combination. This analysis was minimal and more time will be spent in future work to explore and identify any constraint limitations.
 
