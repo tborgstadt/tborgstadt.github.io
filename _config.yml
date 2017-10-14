@@ -7,7 +7,7 @@ description:      Data Engineering, Data Mining, and Machine Learning
 url:              http://blog.tomborgstadt.com
 baseurl:          /
 
-permalink:       '/blog/:year/:month/:title'
+permalink:       '/blog/:year/:month/:day/:title'
 
 author:           Tom Borgstadt
 
