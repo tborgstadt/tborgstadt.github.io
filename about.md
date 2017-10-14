@@ -23,7 +23,8 @@ My endeavor is to redirect my career into a more data centric path that effectiv
 * Information Technology
 
 #### Education
-Masters of Science degree in Business Intelligence and Analytics
+
+**Masters of Science degree in Business Intelligence and Analytics**
 <br>[Rockhurst University](http://ww2.rockhurst.edu/helzberg/msbia){:target="_blank"}
 
 Emphasis areas:
@@ -37,7 +38,7 @@ Emphasis areas:
 Technologies:
 Linux, Python, R, Scikit-learn, Pyspark-mllib, Spark, Hadoop (HDFS and Hive), Vertica, MySQL, Postgres, MongoDB
 
-Bachelors of Science degree in Computer Science
+**Bachelors of Science degree in Computer Science**
 <br>[University of Missouri](http://missouri.edu/){:target="_blank"}
 
 Emphasis areas:
