@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     Predicting Diabetes Hospital Patient Re-admittance 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="Data Engineering, Data Mining, and Machine Learning">
+  <meta name="keywords" content="k-means, rpart, classification">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="Predicting Diabetes Hospital Patient Re-admittance &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="Data Engineering, Data Mining, and Machine Learning">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/05/diabetes">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">Predicting Diabetes Hospital Patient Re-admittance</h1>
+
+    <p class="tag-box inline"><a href="/tags#k-means" title="Pages tagged k-means" rel="tag">k-means</a><a href="/tags#rpart" title="Pages tagged rpart" rel="tag">rpart</a><a href="/tags#classification" title="Pages tagged classification" rel="tag">classification</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-05-15">15 May 2015</p>
+
+    <p>The objective here is to see if its possible to identify diabetes patients that would be likely to readmit to the hospital. If so, there is tremendous opportunity to reduce costs associated with hospital stays even if re-admittances could be reduced slightly.</p>
+
+<ul id="markdown-toc">
+  <li><a href="#dataset" id="markdown-toc-dataset">Dataset</a></li>
+  <li><a href="#modeling-approach" id="markdown-toc-modeling-approach">Modeling Approach</a></li>
+  <li><a href="#analysis" id="markdown-toc-analysis">Analysis</a></li>
+  <li><a href="#results" id="markdown-toc-results">Results</a></li>
+  <li><a href="#conclusion" id="markdown-toc-conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="dataset">Dataset</h2>
+<p>The dataset I utilized was from the UCI Machine Learning Repository:
+<a href="http://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008" target="_blank">Beata Strack, Jonathan P. DeShazo, Chris Gennings, Juan L. Olmo, Sebastian Ventura, Krzysztof J. Cios, and John N. Clore, “Impact of HbA1c Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records,” BioMed Research International, vol. 2014, Article ID 781670, 11 pages, 2014.</a></p>
+
+<ul>
+  <li>10 years of clinical diabetes inpatient care at 130 US hospitals</li>
+  <li>101,766 instances, 55 attributes</li>
+  <li>Each instance recorded whenever diabetes was entered as a diagnosis</li>
+  <li>Laboratory test results</li>
+  <li>Medications administered</li>
+  <li>Length of stay, type of admittance, visits prior to admittance</li>
+  <li>Basic demographics</li>
+  <li>Readmitted =&gt; No, Yes(&gt;30 days), Yes(&lt;30 days)</li>
+</ul>
+
+<h2 id="modeling-approach">Modeling Approach</h2>
+
+<ul>
+  <li>Use an out of bag estimate for initial feasibility assessment</li>
+  <li>Fit a random forest model based on initial variable selection and tune using cross validation on a 60% split training set</li>
+  <li>For comparison fit a decision tree model using the same variable selection and training set</li>
+  <li>Tune =&gt; Analyze Results =&gt; Tune Again =&gt;…. Etc.</li>
+</ul>
+
+<p>The R notebook can be view <a href="/notebooks/20150515-rDiabetes.html" target="_blank">here</a></p>
+
+<h2 id="analysis">Analysis</h2>
+<ul>
+  <li>Difficulty improving accuracy greater than 62%</li>
+  <li>Data has many categorical variables with large number of levels which model has bias but variables don’t provide best splitting values</li>
+  <li>Experiment:  Use clustering to identify groups that have clear tendency to re-admit and use the group identifier (cluster) to achieve better ensemble predictive performance</li>
+  <li>Clustering identifies clear relationship (quantitative) between the following variables:
+    <ul>
+      <li>Gender: Diabetes Meds: Age: Max Glucose</li>
+      <li>A1 Cresult: Insulin: No of Diagnosis: Readmitted</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="results">Results</h2>
+
+<figure><a href="/images/diabetes-01.png"><img src="/images/20150515-diabetes-01.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>DT Boosted</p>
+
+<ul>
+  <li>predicted patient would re-admit and they did re-admit -&gt; 100% of the time</li>
+  <li>predicted patient would not re-admit and they did NOT re-admit -&gt; 79.9% of the time</li>
+</ul>
+
+<p>Models optimized with clustering (K-means) to identify groups at risk for re-admittance</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<ul>
+  <li>Predicting patients at risk for re-admittance seems achievable however the data set has been challenging</li>
+  <li>Even less than desirable accuracy could make significant impact from a business/cost perspective</li>
+  <li>The method used to boost performance by clustering presents an interesting idea but needs further research to validate</li>
+  <li>Research additional methods for improving random forest performance:
+    <ul>
+      <li>Partial permutations for variable selection</li>
+      <li>Using combination of decision tree learning and clustering</li>
+    </ul>
+  </li>
+</ul>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>

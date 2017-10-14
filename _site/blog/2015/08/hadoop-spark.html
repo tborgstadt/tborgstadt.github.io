@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     Install Spark 1.5 with Hadoop 2.6 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="How to install Spark 1.5 alongside a single node of Hadoop 2.6 running on Ubuntu 14.04">
+  <meta name="keywords" content="hadoop, spark, ubuntu, virtualbox">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="Install Spark 1.5 with Hadoop 2.6 &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="How to install Spark 1.5 alongside a single node of Hadoop 2.6 running on Ubuntu 14.04">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/08/hadoop-spark">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">Install Spark 1.5 with Hadoop 2.6</h1>
+
+    <p class="tag-box inline"><a href="/tags#hadoop" title="Pages tagged hadoop" rel="tag">hadoop</a><a href="/tags#spark" title="Pages tagged spark" rel="tag">spark</a><a href="/tags#ubuntu" title="Pages tagged ubuntu" rel="tag">ubuntu</a><a href="/tags#virtualbox" title="Pages tagged virtualbox" rel="tag">virtualbox</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-08-23">23 Aug 2015</p>
+
+    <p>I am installing Spark 1.5 today on a new single cluster of Hadoop 2.6, created from a previous post.</p>
+
+<ul id="markdown-toc">
+  <li><a href="#create-a-new-vm" id="markdown-toc-create-a-new-vm">Create a new VM</a></li>
+  <li><a href="#install-spark" id="markdown-toc-install-spark">Install Spark</a></li>
+  <li><a href="#start-spark-and-verify" id="markdown-toc-start-spark-and-verify">Start Spark and verify</a></li>
+  <li><a href="#start-hadoop-and-verify" id="markdown-toc-start-hadoop-and-verify">Start Hadoop and verify</a></li>
+  <li><a href="#test-spark-context" id="markdown-toc-test-spark-context">Test Spark context</a></li>
+</ul>
+
+<h2 id="create-a-new-vm">Create a new VM</h2>
+<p>Clone previous virtual machine (VM) <strong>hd-single</strong> to new VM <strong>hd-spark</strong> using the VirtualBox administration GUI.</p>
+
+<p>Start the new VM <strong>hd-spark</strong> and login as administrator (user <strong>tom</strong> in my case).</p>
+
+<p>Change hostname.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">tom@hd-single:~$ </span>sudo nano /etc/hostname
+
+<span class="c"># change hd-single to hd-spark:</span>
+  hd-spark
+
+<span class="c"># save</span></code></pre></figure>
+
+<p>Change hosts table.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">tom@hd-single:~$ </span>sudo nano /etc/hosts
+
+<span class="c"># clear the hosts file and make contents:</span>
+  127.0.0.1   hd-spark
+  127.0.0.1   localhost
+
+<span class="c"># save file</span>
+
+<span class="c"># exit terminal</span>
+<span class="gp">tom@hd-single:~$ </span><span class="nb">exit</span></code></pre></figure>
+
+<p>Open a terminal and change SSH authorized keys:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># login as hduser</span>
+<span class="gp">tom@hd-spark:~$ </span>su hduser
+
+<span class="c"># change hduser@hd-single to hduser@hd-spark</span>
+<span class="gp">hduser@hd-spark:/home/tom$ </span><span class="nb">cd
+</span><span class="gp">hduser@hd-spark:~$ </span><span class="nb">cd</span> .ssh
+<span class="gp">hduser@hd-spark:~/.ssh$ </span>nano authorized_keys
+
+<span class="c"># change 'hduser@hd-single' to 'hduser@hd-spark'</span>
+
+<span class="c"># save</span>
+
+<span class="gp">hduser@hd-spark:~/.ssh$ </span><span class="nb">cd</span></code></pre></figure>
+
+<h2 id="install-spark">Install Spark</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># download Spark</span>
+<span class="gp">hduser@hd-spark:~$ </span>wget http://d3kbcqa49mib13.cloudfront.net/spark-1.5.0-bin-hadoop2.6.tgz
+
+<span class="c"># untar (unzip)</span>
+<span class="gp">hduser@hd-spark:~$ </span>tar -xvf spark-1.5.0-bin-hadoop2.6.tgz
+
+<span class="c"># create Spark directory</span>
+<span class="gp">hduser@hd-spark:~$ </span>sudo mkdir /usr/local/spark
+
+<span class="c"># change working directory</span>
+<span class="gp">hduser@hd-spark:~$ </span><span class="nb">cd </span>spark-1.5.0-bin-hadoop2.6
+
+<span class="c"># move the contents of Spark installation to the /usr/local/spark directory:</span>
+<span class="gp">hduser@hd-spark:~/spark-1.5.0-bin-hadoop2.6$ </span>sudo mv <span class="k">*</span> /usr/local/spark
+
+<span class="c"># change owner of the spark directory</span>
+<span class="gp">hduser@hd-spark:~/spark-1.5.0-bin-hadoop2.6$ </span>sudo chown -R hduser:hadoop /usr/local/spark
+
+<span class="c"># edit ~/.bashrc so Spark environment</span>
+<span class="gp">hduser@hd-spark:~$ </span>sudo nano ~/.bashrc
+
+<span class="c"># add the following lines:</span>
+  <span class="c"># SPARK VARIABLES BEGIN</span>
+    <span class="nb">export </span><span class="nv">SPARK_HOME</span><span class="o">=</span>/usr/local/spark
+    <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:<span class="nv">$SPARK_HOME</span>/bin
+    <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:<span class="nv">$SPARK_HOME</span>/sbin
+  <span class="c"># SPARK VARIABLES END</span>
+
+<span class="c"># save ~/.bashrc</span>
+
+<span class="c"># refresh environment</span>
+<span class="gp">hduser@hdp-single-spk:~$ </span><span class="nb">source</span> ~/.bashrc
+
+<span class="c"># install is complete</span></code></pre></figure>
+
+<h2 id="start-spark-and-verify">Start Spark and verify</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start Spark master</span>
+<span class="gp">hduser@hd-spark:~$ </span>start-master.sh
+
+<span class="c"># start Spark workers</span>
+<span class="gp">hduser@hd-spark:~$ </span>start-slaves.sh</code></pre></figure>
+
+<p>Open a browser and navigate to Spark Administration.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>Spark Admin</td>
+      <td>http://hd-spark:8080/</td>
+    </tr>
+    <tr>
+      <td>URL:</td>
+      <td>spark://hd-spark:7077</td>
+    </tr>
+    <tr>
+      <td>REST URL:</td>
+      <td>spark://hd-spark:6066 (cluster mode)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="start-hadoop-and-verify">Start Hadoop and verify</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start Hadoop daemons</span>
+<span class="gp">hduser@hd-master:~$ </span>start-dfs.sh
+
+<span class="c"># start MapReduce daemons: </span>
+<span class="gp">hduser@hd-master:~$ </span>start-yarn.sh</code></pre></figure>
+
+<p>Check the cluster status. Open a browser and navigate to the following URLs:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>http://hd-spark:50070/</td>
+      <td>web UI of the NameNode daemon</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Spark Administration.</p>
+<figure><a href="/images/hd-spark-01.png"><img src="/images/hd-spark-01.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>NameNode Status.</p>
+<figure><a href="/images/hd-spark-02.png"><img src="/images/hd-spark-02.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>DataNode Status.</p>
+<figure><a href="/images/hd-spark-03.png"><img src="/images/hd-spark-03.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<h2 id="test-spark-context">Test Spark context</h2>
+
+<p>Create text file and put on hdfs /myhdfs/mytext</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create text file</span>
+<span class="gp">hduser@hd-spark:~$  </span>nano mytext
+
+<span class="c"># paste in any text</span>
+
+<span class="c"># save</span>
+
+<span class="c"># create a new directory in HDFS</span>
+<span class="gp">hduser@hd-spark:~$  </span>hadoop fs -mkdir /myhdfs
+
+<span class="c"># copy the local file into HDFS</span>
+<span class="gp">hduser@hd-spark:~$  </span>hadoop fs -put mytext /myhdfs/mytext</code></pre></figure>
+
+<p>Start pyspark shell.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start pyspark shell</span>
+<span class="gp">hduser@hd-spark:~$ </span>pyspark</code></pre></figure>
+
+<p>Enter the following python code to perform a line count and word count of the text file created above. See if the results make sense based on the text in the file.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="o">&gt;&gt;&gt;</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">textFile</span><span class="p">(</span><span class="s">'hdfs://hd-spark:9000/myhdfs/mytext'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lines_nonempty</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lines_nonempty</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="mi">3</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">words</span> <span class="o">=</span> <span class="n">lines_nonempty</span><span class="o">.</span><span class="n">flatMap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">wordcounts</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reduceByKey</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">sortByKey</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">wordcounts</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="p">[(</span><span class="mi">20</span><span class="p">,</span> <span class="s">u'the'</span><span class="p">),</span> <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="s">u'in'</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="s">u'and'</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="s">u'a'</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s">u'was'</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">u'of'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'to'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'Minneapolis'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'for'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'It'</span><span class="p">)]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">quit</span><span class="p">()</span></code></pre></figure>
+
+<p>That is it! Spark is ready to use.</p>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>

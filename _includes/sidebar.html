@@ -1,0 +1,43 @@
+<div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="{{ site.baseurl }}"> {{ site.name }}</a>
+        <p class="tagline">{{ site.tagline }}</p>
+	<p class="imgatt">        
+            <img src="{{ site.baseurl }}images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">{{ site.description }}</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" href="{{ site.baseurl }}">Home</a>
+      {% assign pages_list = site.pages %}
+      {% for node in pages_list %}
+        {% if node.title != null %}
+          {% if node.layout == "page" %}
+            <a class="sidebar-nav-item{% if page.url == node.url %} active{% endif %}" href="{{ node.url }}">{{ node.title }}</a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; {{ site.time | date: '%Y' }}. All rights reserved.
+    </p>
+  </div>
+
+ </div>

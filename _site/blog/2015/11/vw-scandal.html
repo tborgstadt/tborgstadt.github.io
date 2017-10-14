@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     Text Mining the Volkswagen Diesel Scandal 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="Topic analysis of articles related to the VW diesel scandal from September 2015 to early December 2015.">
+  <meta name="keywords" content="api, googlescraper, graphlab, nmf, ny times, topic extraction, web scraping">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="Text Mining the Volkswagen Diesel Scandal &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="Topic analysis of articles related to the VW diesel scandal from September 2015 to early December 2015.">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/11/vw-scandal">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">Text Mining the Volkswagen Diesel Scandal</h1>
+
+    <p class="tag-box inline"><a href="/tags#api" title="Pages tagged api" rel="tag">api</a><a href="/tags#googlescraper" title="Pages tagged googlescraper" rel="tag">googlescraper</a><a href="/tags#graphlab" title="Pages tagged graphlab" rel="tag">graphlab</a><a href="/tags#nmf" title="Pages tagged nmf" rel="tag">nmf</a><a href="/tags#ny+times" title="Pages tagged ny times" rel="tag">ny times</a><a href="/tags#topic+extraction" title="Pages tagged topic extraction" rel="tag">topic extraction</a><a href="/tags#web+scraping" title="Pages tagged web scraping" rel="tag">web scraping</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-11-30">30 Nov 2015</p>
+
+    <p>We own two Volkswagen diesel cars affected by the recent scandal where Volkswagen knowingly mislead the EPA and the public about emissions produced from their “clean diesel” technology. So, I was interested to learn about public sentiment and discussion topics during the 3 months since September 18th when the scandal broke.</p>
+
+<p>My intent was to use data from Twitter but the quote I received for the 3 months of data I needed was too much, so I decided instead to use articles published by <a href="http://www.nytimes.com" target="_blank">The New York Times</a> for my analysis.</p>
+
+<p>Clearly I found prominent topics throughout the 3 month period but this became more of a research project because I was unable to analyze sentiment and discussion from the public like I would have had with Twitter data. Nevertheless, it was an intersting exercise and I managed to explore a topic visualization package pyLDAvis as a bonus.</p>
+
+<ul id="markdown-toc">
+  <li><a href="#building-the-article-meta-data-list" id="markdown-toc-building-the-article-meta-data-list">Building the article meta data list</a></li>
+  <li><a href="#retrieving-new-york-times-article-text" id="markdown-toc-retrieving-new-york-times-article-text">Retrieving New York Times article text</a></li>
+  <li><a href="#retrieving-syndicated-article-text-from-thomson-reuters" id="markdown-toc-retrieving-syndicated-article-text-from-thomson-reuters">Retrieving syndicated article text from Thomson Reuters</a></li>
+  <li><a href="#topic-extraction" id="markdown-toc-topic-extraction">Topic extraction</a></li>
+  <li><a href="#topic-visualization-with-phldavis" id="markdown-toc-topic-visualization-with-phldavis">Topic visualization with phLDAvis</a></li>
+</ul>
+
+<h2 id="building-the-article-meta-data-list">Building the article meta data list</h2>
+
+<p><a href="http://developer.nytimes.com/docs/read/article_search_api_v2" target="_blank">The New York Times API</a> was used to generate a list of articles. The following information or meta data for each article was collected using the API:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>field</strong></td>
+      <td><strong>description</strong></td>
+    </tr>
+    <tr>
+      <td>news_desk</td>
+      <td>newspaper section</td>
+    </tr>
+    <tr>
+      <td>headline</td>
+      <td>article headline</td>
+    </tr>
+    <tr>
+      <td>word_count</td>
+      <td>article word count</td>
+    </tr>
+    <tr>
+      <td>snippet</td>
+      <td>article summary</td>
+    </tr>
+    <tr>
+      <td>source</td>
+      <td>article source (i.e. The NY Times, Thomson, AP, etc)</td>
+    </tr>
+    <tr>
+      <td>web_url</td>
+      <td>web address</td>
+    </tr>
+    <tr>
+      <td>search_terms</td>
+      <td>search terms used to find the article</td>
+    </tr>
+    <tr>
+      <td>pub_date</td>
+      <td>date the article was published</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The script used to collect a list of articles from the API follows. Note the search terms passed to the API:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/env python2</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">###################################################################</span>
+<span class="c"># This script utilizes "The New York Times" Article API to retrieve </span>
+<span class="c"># article meta data for the given search terms and build a csv file.</span>
+<span class="c">#</span>
+<span class="c"># To register and get a key to use the API vist the following:</span>
+<span class="c">#   http://developer.nytimes.com/docs/read/article_search_api_v2</span>
+<span class="c">#</span>
+<span class="c"># File:   pyArticleMetaList.py</span>
+<span class="c"># Author: Tom Borgstadt</span>
+<span class="c"># Date:   12-01-2015</span>
+<span class="c">#</span>
+<span class="c"># output: selected data fields from API</span>
+<span class="c">###################################################################</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">nytimesarticle</span> <span class="kn">import</span> <span class="n">articleAPI</span>
+
+<span class="c"># the following NY Times registration key in quotes ''</span>
+<span class="c"># this one is mine but you can get yours at link above</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">articleAPI</span><span class="p">(</span><span class="s">'b28axxxxxxxxxxxxf9c07fc6644d7xxxx:12:73xxxxx1'</span><span class="p">)</span>
+
+<span class="n">pathname</span> <span class="o">=</span> <span class="s">'/home/tom/project/'</span>
+
+<span class="k">def</span> <span class="nf">get_news</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">pages</span><span class="p">,</span> <span class="n">beg</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    
+    <span class="k">global</span> <span class="n">news</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">query</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">pages</span><span class="p">):</span>
+            <span class="n">articles</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">q</span> <span class="o">=</span> <span class="n">item</span><span class="p">,</span> 
+                <span class="c">#fq = {'source':['Reuters', 'AP', 'The New York Times', 'Autoweek']}</span>
+                <span class="n">fl</span> <span class="o">=</span><span class="p">[</span><span class="s">'_id'</span><span class="p">,</span><span class="s">'headline'</span><span class="p">,</span><span class="s">'news_desk'</span><span class="p">,</span><span class="s">'pub_date'</span><span class="p">,</span><span class="s">'snippet'</span><span class="p">,</span><span class="s">'source'</span><span class="p">,</span><span class="s">'web_url'</span><span class="p">,</span><span class="s">'word_count'</span><span class="p">],</span>
+                <span class="n">page</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                <span class="n">sort</span> <span class="o">=</span> <span class="s">'oldest'</span><span class="p">,</span>
+                <span class="n">begin_date</span> <span class="o">=</span> <span class="n">beg</span><span class="p">,</span>
+                <span class="n">end_date</span> <span class="o">=</span> <span class="n">end</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">articles</span><span class="p">[</span><span class="s">'response'</span><span class="p">][</span><span class="s">'docs'</span><span class="p">]:</span>
+                <span class="n">dic</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'search_term'</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'id'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'_id'</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'pub_date'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'pub_date'</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'source'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'source'</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'news_desk'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'news_desk'</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'word_count'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'word_count'</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'web_url'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'web_url'</span><span class="p">]</span>
+                <span class="n">dic</span><span class="p">[</span><span class="s">'headline'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'headline'</span><span class="p">][</span><span class="s">'main'</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">"utf8"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span><span class="p">[</span><span class="s">'snippet'</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">dic</span><span class="p">[</span><span class="s">'snippet'</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s">'snippet'</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">"utf8"</span><span class="p">)</span>
+                <span class="n">news</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dic</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">()</span>
+
+<span class="c"># collect articles listing for following search terms from September 1, 2015 to present</span>
+<span class="n">search_terms</span> <span class="o">=</span> <span class="p">[</span><span class="s">'volkswagen scandal'</span><span class="p">,</span><span class="s">'volkswagen diesel'</span><span class="p">,</span><span class="s">'volkswagen cheating'</span><span class="p">,</span><span class="s">'vw scandal'</span><span class="p">,</span><span class="s">'vw diesel'</span><span class="p">,</span><span class="s">'vw cheating'</span><span class="p">]</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="n">pathname</span> <span class="o">+</span> <span class="s">'articles.meta_4.csv'</span>
+
+<span class="n">news</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">get_news</span><span class="p">(</span><span class="n">search_terms</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">20150901</span><span class="p">,</span> <span class="mi">20150930</span><span class="p">)</span>
+<span class="n">get_news</span><span class="p">(</span><span class="n">search_terms</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">20151001</span><span class="p">,</span> <span class="mi">20151031</span><span class="p">)</span>
+<span class="n">get_news</span><span class="p">(</span><span class="n">search_terms</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">20151101</span><span class="p">,</span> <span class="mi">20151130</span><span class="p">)</span>
+<span class="n">get_news</span><span class="p">(</span><span class="n">search_terms</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">20151201</span><span class="p">,</span> <span class="mi">20151231</span><span class="p">)</span>
+
+<span class="n">keys</span> <span class="o">=</span> <span class="n">news</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">'wb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file</span><span class="p">:</span>
+    <span class="n">dict_writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+    <span class="n">dict_writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+    <span class="n">dict_writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">news</span><span class="p">)</span> </code></pre></figure>
+
+<h2 id="retrieving-new-york-times-article-text">Retrieving New York Times article text</h2>
+
+<p>The next step was to build the corpus of documents (articles). Articles published by The New York Times are easily retrieved with the web address of article. The following python script uses the package <a href="https://github.com/codelucas/newspaper" target="_blank">newspaper</a> to retrieve the article text.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">###################################################################</span>
+<span class="c"># This script inputs a csv file of article meta data (created using</span>
+<span class="c"># New York Times Article API), and uses "newspaper" package to</span>
+<span class="c"># retrieve the article text.</span>
+<span class="c">#</span>
+<span class="c"># requirements: python 3.4+</span>
+<span class="c">#</span>
+<span class="c"># input: list of news articles</span>
+<span class="c"># output: all columns from input plus the article text in new file</span>
+<span class="c">#</span>
+<span class="c"># File:   pyArticleTimes.py</span>
+<span class="c"># Author: Tom Borgstadt</span>
+<span class="c"># Date:   12-2-2015</span>
+<span class="c">###################################################################</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">newspaper</span> <span class="kn">import</span> <span class="n">Article</span>
+
+<span class="c"># input and output files setup</span>
+<span class="n">pathname</span> <span class="o">=</span> <span class="s">''</span>     <span class="c"># executing this script in the directory of the data files</span>
+
+<span class="n">inpath</span> <span class="o">=</span> <span class="n">pathname</span> <span class="o">+</span> <span class="s">'articles.meta.csv'</span>
+<span class="n">input_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">inpath</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+
+<span class="n">outpath</span> <span class="o">=</span> <span class="n">pathname</span> <span class="o">+</span> <span class="s">'articles.text.ny.csv'</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+
+<span class="c"># move pointer to column header row</span>
+<span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+
+<span class="c"># write output file column headers</span>
+<span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s">'news_desk'</span><span class="p">,</span><span class="s">'headline'</span><span class="p">,</span><span class="s">'word_count'</span><span class="p">,</span><span class="s">'snippet'</span><span class="p">,</span><span class="s">'source'</span><span class="p">,</span><span class="s">'web_url'</span><span class="p">,</span> <span class="s">'search_term'</span><span class="p">,</span><span class="s">'pub_date'</span><span class="p">,</span><span class="s">'id'</span><span class="p">,</span><span class="s">'text'</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s">'The New York Times'</span><span class="p">:</span>
+            <span class="c"># delay 1 secs</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>      
+            <span class="c"># parse here</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">Article</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">download</span><span class="p">()</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+
+            <span class="c"># only generate output if we have article text</span>
+            <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">!=</span> <span class="s">''</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s">''</span><span class="p">:</span>
+                <span class="c"># output </span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span><span class="n">a</span><span class="o">.</span><span class="n">text</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+<span class="n">input_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">output_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></code></pre></figure>
+
+<h2 id="retrieving-syndicated-article-text-from-thomson-reuters">Retrieving syndicated article text from Thomson Reuters</h2>
+
+<p>Articles syndicated by The New York Times but published by Thomson Reuters in most cases were no longer active on The New York Times web site so I needed a way to look up the article on Thompson Reuters. I was able to achieve this by using <a href="https://github.com/NikolaiT/GoogleScraper" target="_blank">GoogleScraper</a>. GoogleScraper let me automate a Bing search for each Reuters article headline, find the article web link to Thomson Reuters, and retrieve the article text directly from Reuters.com. Bing was used because it currently does not throttle calls executed by a script, unlike other search engines. This worked well.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">#!/usr/bin/env python3</span>
+<span class="c"># -*- coding: utf-8 -*-</span>
+<span class="c">###################################################################</span>
+<span class="c"># This script inputs a csv file of article meta data (created using</span>
+<span class="c"># New York Times Article API), and uses "GoogleScraper" package to</span>
+<span class="c"># retrieve the actual Reuters link using the headline from the </span>
+<span class="c"># article meta data list. Bing is used as it does not block multiple</span>
+<span class="c"># calls. Assume the top rank article is the link to use against </span>
+<span class="c"># Reuters. This is accurate near 100% by including "Reuters" with the</span>
+<span class="c"># headline as search terms.</span>
+<span class="c">#</span>
+<span class="c"># Once the article links is found with the search it is utilized to</span>
+<span class="c"># retrieve the article text with the package "newspaper"</span>
+<span class="c"># </span>
+<span class="c"># requirements: python 3.4+</span>
+<span class="c">#</span>
+<span class="c"># input: list of news articles</span>
+<span class="c"># output: all columns from input plus the article text in new file</span>
+<span class="c">#</span>
+<span class="c"># File:   pyArticleTextReuters.py</span>
+<span class="c"># Author: Tom Borgstadt</span>
+<span class="c"># Date:   12-2-2015</span>
+<span class="c">###################################################################</span>
+<span class="kn">from</span> <span class="nn">GoogleScraper</span> <span class="kn">import</span> <span class="n">scrape_with_config</span><span class="p">,</span> <span class="n">GoogleSearchError</span>
+<span class="kn">from</span> <span class="nn">GoogleScraper.utils</span> <span class="kn">import</span> <span class="n">get_some_words</span>
+<span class="kn">from</span> <span class="nn">newspaper</span> <span class="kn">import</span> <span class="n">Article</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span> <span class="kn">as</span> <span class="nn">lite</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">'use_own_ip'</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="s">'keywords'</span><span class="p">:</span> <span class="p">[</span><span class="s">'headline goes here'</span><span class="p">],</span>
+    <span class="s">'search_engines'</span><span class="p">:</span> <span class="p">[</span><span class="s">'bing'</span><span class="p">,],</span>
+    <span class="s">'num_pages_for_keyword'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s">'scrape_method'</span><span class="p">:</span> <span class="s">'http'</span><span class="p">,</span>
+    <span class="s">'do_caching'</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c"># input and output files setup</span>
+<span class="n">pathname</span> <span class="o">=</span> <span class="s">''</span>      <span class="c"># executing this script in the directory of the data</span>
+
+<span class="n">inpath</span> <span class="o">=</span> <span class="n">pathname</span> <span class="o">+</span> <span class="s">'articles.meta.csv'</span>
+<span class="n">input_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">inpath</span><span class="p">,</span> <span class="s">'r'</span><span class="p">)</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span>
+
+<span class="n">outpath</span> <span class="o">=</span> <span class="n">pathname</span> <span class="o">+</span> <span class="s">'articles.text.others.csv'</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="s">'w'</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+
+<span class="c"># move pointer to column header row</span>
+<span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+
+<span class="c"># write output file column headers</span>
+<span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s">'news_desk'</span><span class="p">,</span><span class="s">'headline'</span><span class="p">,</span><span class="s">'word_count'</span><span class="p">,</span><span class="s">'snippet'</span><span class="p">,</span><span class="s">'source'</span><span class="p">,</span><span class="s">'web_url'</span><span class="p">,</span> <span class="s">'search_term'</span><span class="p">,</span><span class="s">'pub_date'</span><span class="p">,</span><span class="s">'id'</span><span class="p">,</span><span class="s">'text'</span><span class="p">])</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s">'Reuters'</span><span class="p">:</span>
+            <span class="c"># update the search keyword string with headline of interest</span>
+            <span class="c"># string 'Reuters' in front of headline to ensure item first in search results</span>
+            <span class="n">config</span><span class="p">[</span><span class="s">'keywords'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s">' '</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+            <span class="c"># invoke google search scraper to generate list of links for the headline of interest</span>
+            <span class="n">search</span> <span class="o">=</span> <span class="n">scrape_with_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+            <span class="c"># get link</span>
+            <span class="c"># database connection and cursor def</span>
+            <span class="n">con</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">con</span> <span class="o">=</span> <span class="n">lite</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s">'google_scraper.db'</span><span class="p">)</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+            <span class="c"># we can always look at the last entry for the serp_id</span>
+            <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'select link from link where serp_id = (select max(serp_id) from link) and rank=1;'</span><span class="p">)</span>
+            
+            <span class="c"># cursor returns tuple so convert to list</span>
+            <span class="n">new_url</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">con</span><span class="p">:</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">new_url</span> <span class="o">!=</span> <span class="s">''</span><span class="p">:</span>
+                <span class="c"># parse here</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">Article</span><span class="p">(</span><span class="n">new_url</span><span class="p">)</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">download</span><span class="p">()</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">parse</span><span class="p">()</span>
+                <span class="c"># only generate output if we have article text</span>
+                <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">!=</span> <span class="s">''</span><span class="p">:</span>
+                    <span class="c"># output </span>
+                    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span><span class="n">new_url</span><span class="p">,</span><span class="n">line</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span><span class="n">line</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span><span class="n">a</span><span class="o">.</span><span class="n">text</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+<span class="n">input_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">output_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></code></pre></figure>
+
+<h1 id="topic-extraction">Topic extraction</h1>
+
+<p>Non-Negative Matrix Factorization (NMF) and Graphlab were utilized for extracting topics. Graphlab was evaluated mainly because it offers ready made hooks for pyLDAvis which I was keen to evaluate (last section below).</p>
+
+<p>For the main part of my analysis using NMF topics, I went with the following settings (after all preprocessing, removing stop words, making replacements, etc):
+Term Frequency Inverse Document Frequency (TFidf) vectorization with minimum document frequency of .015 and maximum document frequency of .75. The NMF topic model set for 15 topics.</p>
+
+<p>The following topic results from NMF:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>master_topic</strong></td>
+      <td><strong>topic (top 5 words)</strong></td>
+      <td><strong>no. of articles</strong></td>
+    </tr>
+    <tr>
+      <td>Bosch Implication</td>
+      <td>bosch-supplier-components-engine-software</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <td>EPA Findings</td>
+      <td>epa-software-defeat-vehicles-agency</td>
+      <td>53</td>
+    </tr>
+    <tr>
+      <td>Electric Markets</td>
+      <td>china-electric-technology-market-data</td>
+      <td>24</td>
+    </tr>
+    <tr>
+      <td>Financial Impacts</td>
+      <td>billion-euros-costs-scandal-analysts</td>
+      <td>59</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>sales-percent-october-month-year</td>
+      <td>45</td>
+    </tr>
+    <tr>
+      <td>German Government Statements</td>
+      <td>german-transport-minister-dobrindt-berlin</td>
+      <td>73</td>
+    </tr>
+    <tr>
+      <td>Global Road Tests</td>
+      <td>korea-south-ministry-test-unit</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>test-european-eu-commission-road</td>
+      <td>42</td>
+    </tr>
+    <tr>
+      <td>Investigation and Litigation</td>
+      <td>australia-class-fitted-action-sydney</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>briefing-eastern-today-morning-pm</td>
+      <td>19</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>criminal-investigation-prosecutors-justic</td>
+      <td>40</td>
+    </tr>
+    <tr>
+      <td>Management Statements</td>
+      <td>audi-porsche-hackenberg-thursday-cremer</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td>winterkorn-company-executive-chief-board</td>
+      <td>68</td>
+    </tr>
+    <tr>
+      <td>Owners and Dealers</td>
+      <td>vw-owners-models-mueller-dealers</td>
+      <td>50</td>
+    </tr>
+    <tr>
+      <td>Pollution Standards</td>
+      <td>fuel-gasoline-engines-pollution-standards</td>
+      <td>39</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Topic article counts:</p>
+<figure><a href="/images/vw-01.png"><img src="/images/vw-01.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>Topic frequency by week:</p>
+<figure><a href="/images/vw-02.png"><img src="/images/vw-02.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<h1 id="topic-visualization-with-phldavis">Topic visualization with phLDAvis</h1>
+<p>Here I used a proprietary package Graphlab (trial) to model topics because it has ready interface to package pyLDAvis for the nice interactive visualization. pyLDAvis is model agnostic and in the essence of time, did not workout the munging necessary to get the NMF model topics into pyLDAvis but will do in separate later post.</p>
+
+<p>Topics from Graphlab displayed with pyLDAvis:</p>
+<figure><a href="/images/vw-03.png"><img src="/images/vw-03.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>

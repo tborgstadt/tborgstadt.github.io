@@ -1,0 +1,30 @@
+# site variables (site.<var>)
+
+name:             Tom Borgstadt
+tagline:          Predictive Analytics
+description:      Data Engineering, Data Mining, and Machine Learning
+
+url:              http://blog.tomborgstadt.com
+baseurl:          /
+
+permalink:       '/blog/:year/:month/:title'
+
+author:           Tom Borgstadt
+
+ga:               UA-71942635-1
+
+exclude:          [Gemfile, Gemfile.lock, README.md, LICENSE.md]
+
+markdown:         kramdown
+
+kramdown:
+   math_engine:   mathjax
+
+highlighter:      rouge
+
+gems: ['jekyll/scholar', 'jekyll/footnotes']
+
+
+
+ 
+

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     Install Hadoop 2.6 on Ubuntu 14.04 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="This is an installation script for single node of Hadoop 2.6">
+  <meta name="keywords" content="hadoop, ubuntu, virtualbox">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="Install Hadoop 2.6 on Ubuntu 14.04 &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="This is an installation script for single node of Hadoop 2.6">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/08/hadoop">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">Install Hadoop 2.6 on Ubuntu 14.04</h1>
+
+    <p class="tag-box inline"><a href="/tags#hadoop" title="Pages tagged hadoop" rel="tag">hadoop</a><a href="/tags#ubuntu" title="Pages tagged ubuntu" rel="tag">ubuntu</a><a href="/tags#virtualbox" title="Pages tagged virtualbox" rel="tag">virtualbox</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-08-15">15 Aug 2015</p>
+
+    <p>The purpose of this project was twofold. First, to learn how to install Hadoop, and second, to prepare for a second project to expand to a multi-node implementation.</p>
+
+<p>This is all linux command line. Use the text editor of your choice. I use nano.</p>
+
+<ul id="markdown-toc">
+  <li><a href="#prerequisites" id="markdown-toc-prerequisites">Prerequisites</a>    <ul>
+      <li><a href="#base-environment" id="markdown-toc-base-environment">Base Environment</a></li>
+      <li><a href="#install-java" id="markdown-toc-install-java">Install JAVA</a></li>
+      <li><a href="#disable-ipv6" id="markdown-toc-disable-ipv6">Disable IPv6</a></li>
+      <li><a href="#install-secure-shell-ssh" id="markdown-toc-install-secure-shell-ssh">Install Secure Shell (SSH)</a></li>
+      <li><a href="#create-hadoop-user" id="markdown-toc-create-hadoop-user">Create Hadoop User</a></li>
+      <li><a href="#create-ssh-certificates" id="markdown-toc-create-ssh-certificates">Create SSH Certificates</a></li>
+    </ul>
+  </li>
+  <li><a href="#install-hadoop" id="markdown-toc-install-hadoop">Install Hadoop</a>    <ul>
+      <li><a href="#bashrc" id="markdown-toc-bashrc">~/.bashrc</a></li>
+      <li><a href="#hadoop-envsh" id="markdown-toc-hadoop-envsh">hadoop-env.sh</a></li>
+      <li><a href="#core-sitexml" id="markdown-toc-core-sitexml">core-site.xml</a></li>
+      <li><a href="#mapred-sitexml" id="markdown-toc-mapred-sitexml">mapred-site.xml</a></li>
+      <li><a href="#hdfs-sitexml" id="markdown-toc-hdfs-sitexml">hdfs-site.xml</a></li>
+      <li><a href="#yarn-sitexml" id="markdown-toc-yarn-sitexml">yarn-site.xml</a></li>
+    </ul>
+  </li>
+  <li><a href="#format-hadoop-filesystem" id="markdown-toc-format-hadoop-filesystem">Format Hadoop Filesystem</a></li>
+  <li><a href="#start-hadoop-and-verify" id="markdown-toc-start-hadoop-and-verify">Start Hadoop and Verify</a></li>
+  <li><a href="#hadoop-browser-interfaces" id="markdown-toc-hadoop-browser-interfaces">Hadoop Browser Interfaces</a></li>
+</ul>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<p>There are some basic requirements before the installation and configuration of Hadoop can begin.</p>
+
+<h3 id="base-environment">Base Environment</h3>
+<p>Hadoop is installed here on a virtual machine (VM) running Ubuntu 14.04 on VirtualBox 4.3.30. If you are installing your single node instance on physical hardware then there is no need for VirtualBox. However, virtualization is a powerful tool for these sorts of projects especially in the exploratory or proof of concept stages.</p>
+
+<p>The server name I used is <strong>hd-single</strong>.</p>
+
+<p>I have included the command line context throughout this writing. For example <strong>hduser@hd-single</strong> indicates that user <strong>hduser</strong> is the active user on server <strong>hd-single</strong>. Also note, user <strong>tom</strong> is the server administrator used to install prerequisite software.</p>
+
+<h3 id="install-java">Install JAVA</h3>
+<p>Hadoop requires Java. The open JDK project is the default version of Java that is provided from the supported Ubuntu repository. This should work.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># install jdk</span>
+<span class="gp">tom@hd-single:~$ </span>sudo apt-get install default-jdk
+
+<span class="c"># check version</span>
+<span class="gp">tom@hd-single:~$ </span>java -version
+<span class="c"># returns something like:</span>
+<span class="c">#   java version "1.7.0_79"</span>
+<span class="c">#   OpenJDK Runtime Environment (IcedTea 2.5.6) (7u79-2.5.6-0ubuntu1.14.04.1)</span>
+<span class="c">#   OpenJDK 64-Bit Server VM (build 24.79-b02, mixed mode)</span></code></pre></figure>
+
+<h3 id="disable-ipv6">Disable IPv6</h3>
+<p>Hadoop may bind to IPv6 addresses. Hadoop will not work on IPv6. Disable IPv6.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit systctl.conf</span>
+<span class="gp">tom@hd-single:~/$ </span>sudo nano /etc/sysctl.conf
+
+<span class="c"># add the following lines at the end of the file:</span>
+	net.ipv6.conf.all.disable_ipv6 <span class="o">=</span> 1
+	net.ipv6.conf.default.disable_ipv6 <span class="o">=</span> 1
+	net.ipv6.conf.lo.disable_ipv6 <span class="o">=</span> 1
+
+<span class="c"># save sysctl.conf</span>
+
+<span class="c"># reboot</span>
+<span class="gp">tom@hd-single:~/$ </span>sudo shutdown -r now
+
+<span class="c"># after reboot, check return value should be 1</span>
+<span class="gp">tom@hd-single$ </span>cat /proc/sys/net/ipv6/conf/all/disable_ipv6
+<span class="c"># returns:</span>
+<span class="c">#   1</span></code></pre></figure>
+
+<h3 id="install-secure-shell-ssh">Install Secure Shell (SSH)</h3>
+<p>Hadoop requires SSH for access to its nodes. SSH has two main components.</p>
+
+<ul>
+  <li>The command used to connect to remote machines - the client</li>
+  <li>The daemon that runs on the node and allows the client to connect</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># install ssh</span>
+<span class="gp">tom@hd-single:~$ </span>sudo apt-get install ssh
+
+<span class="c"># check install by the following commands and note results</span>
+<span class="gp">tom@hd-single:~$ </span>which ssh
+<span class="c"># returns:</span>
+<span class="c">#   /usr/bin/ssh</span>
+
+<span class="gp">tom@hd-single:~$ </span>which sshd
+<span class="c"># returns: </span>
+<span class="c">#   /usr/sbin/sshd</span>
+
+<span class="c"># these look ok</span></code></pre></figure>
+
+<h3 id="create-hadoop-user">Create Hadoop User</h3>
+<p>Create a dedicated Hadoop group <strong>hadoop</strong> and user <strong>hduser</strong>. Hadoop will run under this user and this user will be used by Hadoop to access future nodes with SSH.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create group</span>
+<span class="gp">tom@hd-single:~$ </span>sudo addgroup hadoop
+
+<span class="c"># create user and add user to group</span>
+<span class="gp">tom@hd-single:~$ </span>sudo adduser --ingroup hadoop hduser
+
+<span class="c"># add the user to the sudoers (administrators) group</span>
+<span class="gp">tom@hd-single:~$ </span>sudo adduser hduser sudo</code></pre></figure>
+
+<h3 id="create-ssh-certificates">Create SSH Certificates</h3>
+<p>Since this is a single node setup, SSH only needs configuration for local host. SSH needs to be up and running and configured to allow SSH public key authentication. In other words, a certificate needs to be created so <strong>hduser</strong> is not prompted for a password.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># login as hduser</span>
+<span class="gp">tom@hd-single:~$ </span>su hduser
+
+<span class="c"># back to root</span>
+<span class="gp">hduser@hd-single:/home/tom$ </span><span class="nb">cd</span> 
+
+<span class="c"># generate public key, leaving all prompts "blank" for this purpose</span>
+<span class="c"># this will create public key /home/hduser/.ssh/id_rsa.pub</span>
+<span class="gp">hduser@hd-single:~$ </span>ssh-keygen -t rsa -P <span class="s2">""</span>
+
+<span class="c"># add the new key to the list of authorized keys</span>
+<span class="gp">hduser@hd-single:~$ </span>cat <span class="nv">$HOME</span>/.ssh/id_rsa.pub &gt;&gt; <span class="nv">$HOME</span>/.ssh/authorized_keys
+
+<span class="c"># check if ssh works, enter "yes" when prompted "Are you sure...?"</span>
+<span class="gp">hduser@hd-single:~$ </span>ssh localhost
+<span class="c"># returns something like:</span>
+<span class="c">#   The authenticity of host 'localhost (127.0.0.1)' can't be established.</span>
+<span class="c">#   ECDSA key fingerprint is e1:8b:a0:a5:75:ef:f4:b4:5e:a9:ed:be:64:be:5c:2f.</span>
+<span class="c">#   Are you sure you want to continue connecting (yes/no)? yes</span>
+<span class="c">#   Warning: Permanently added 'localhost' (ECDSA) to the list of known hosts.</span>
+<span class="c">#   Welcome to Ubuntu 14.04.1 LTS (GNU/Linux 3.13.0-40-generic x86_64)</span></code></pre></figure>
+
+<h2 id="install-hadoop">Install Hadoop</h2>
+<p>The system is now ready to install Hadoop. I installed Hadoop to <strong>/usr/local/hadoop</strong>.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># download Hadoop</span>
+<span class="gp">hduser@hd-single:~$ </span>wget http://mirrors.sonic.net/apache/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz
+
+<span class="c"># untar (unzip)</span>
+<span class="gp">hduser@hd-single:~$ </span>tar xvzf hadoop-2.6.0.tar.gz
+
+<span class="c"># make hadoop directory</span>
+<span class="gp">hduser@hd-single:~$ </span>sudo mkdir /usr/local/hadoop
+
+<span class="c"># change directory</span>
+<span class="gp">hduser@hd-single:~$ </span><span class="nb">cd </span>hadoop-2.6.0
+
+<span class="c"># move the contents of Hadoop installation to the /usr/local/hadoop directory:</span>
+<span class="gp">hduser@hd-single:~/hadoop-2.6.0$ </span>sudo mv <span class="k">*</span> /usr/local/hadoop
+
+<span class="c"># change owner of the hadoop directory</span>
+<span class="gp">hduser@hd-single:~/hadoop-2.6.0$ </span>sudo chown -R hduser:hadoop /usr/local/hadoop
+
+<span class="c"># back to root</span>
+<span class="gp">hduser@hd-single:~/hadoop-2.6.0$ </span><span class="nb">cd</span> ..</code></pre></figure>
+
+<p>##Configure Hadoop
+The following files must be modified to complete the Hadoop setup.</p>
+
+<h4 id="bashrc">~/.bashrc</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># find the path where Java resides to set the JAVA_HOME environment variable</span>
+<span class="gp">hduser@hd-single:~$ </span>update-alternatives --config java
+<span class="c"># returns something like:</span>
+<span class="c">#   There is only one alternative in link group java (providing /usr/bin/java): </span>
+<span class="c">#   /usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java</span>
+<span class="c">#   Nothing to configure.</span>
+
+<span class="c"># make note path for JAVA_HOME</span>
+
+<span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano ~/.bashrc
+
+<span class="c"># append the following lines to ~/.bashrc</span>
+<span class="c"># this will set the environment when the user logs into Ubuntu</span>
+<span class="c">#   ensure JAVA_HOME is set correctly with info from alternatives info above</span>
+<span class="c">#   ensure HADOOP_HOME is set correctly with path from install</span>
+  <span class="c"># HADOOP VARIABLES START</span>
+    <span class="nb">export </span><span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/lib/jvm/java-7-openjdk-amd64
+    <span class="nb">export </span><span class="nv">HADOOP_HOME</span><span class="o">=</span>/usr/local/hadoop
+
+    <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:<span class="nv">$HADOOP_HOME</span>/bin
+    <span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:<span class="nv">$HADOOP_HOME</span>/sbin
+    <span class="nb">export </span><span class="nv">HADOOP_MAPRED_HOME</span><span class="o">=</span><span class="nv">$HADOOP_HOME</span>
+    <span class="nb">export </span><span class="nv">HADOOP_COMMON_HOME</span><span class="o">=</span><span class="nv">$HADOOP_HOME</span>
+    <span class="nb">export </span><span class="nv">HADOOP_HDFS_HOME</span><span class="o">=</span><span class="nv">$HADOOP_HOME</span>
+    <span class="nb">export </span><span class="nv">YARN_HOME</span><span class="o">=</span><span class="nv">$HADOOP_HOME</span>
+    <span class="nb">export </span><span class="nv">HADOOP_COMMON_LIB_NATIVE_DIR</span><span class="o">=</span><span class="nv">$HADOOP_HOME</span>/lib/native
+    <span class="nb">export </span><span class="nv">HADOOP_OPTS</span><span class="o">=</span><span class="s2">"-Djava.library.path=</span><span class="nv">$HADOOP_HOME</span><span class="s2">/lib"</span>
+  <span class="c"># HADOOP VARIABLES END</span>
+
+<span class="c"># save ~/.bashrc</span>
+
+<span class="c"># if other users will be using hadoop this will need to be repeated for each</span>
+
+<span class="c"># re-set active environment after adding above</span>
+<span class="gp">hduser@hd-single:~$ </span><span class="nb">source</span> ~/.bashrc
+
+<span class="c"># check environment variables:</span>
+<span class="gp">hduser@hd-single:~$ </span>printenv</code></pre></figure>
+
+<h4 id="hadoop-envsh">hadoop-env.sh</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+
+<span class="c"># modify following line to reflect correct path for JAVA:</span>
+    <span class="nb">export </span><span class="nv">JAVA_HOME</span><span class="o">=</span>/usr/lib/jvm/java-7-openjdk-amd64
+
+<span class="c"># save</span>
+<span class="c"># this will ensure JAVA is available to Hadoop at startup</span></code></pre></figure>
+
+<h4 id="core-sitexml">core-site.xml</h4>
+<p>This file contains configuration properties for Hadoop at startup. This file overrides default settings.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create a directory for hadoop to override settings</span>
+<span class="gp">hduser@hd-single:~$ </span>sudo mkdir -p /app/hadoop/tmp
+
+<span class="c"># change owner</span>
+<span class="gp">hduser@hd-single:~$ </span>sudo chown hduser:hadoop /app/hadoop/tmp
+
+<span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano /usr/local/hadoop/etc/hadoop/core-site.xml
+
+<span class="c"># set the following property:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;fs.default.name&lt;/name&gt;
+    &lt;value&gt;hdfs://localhost:9000&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="mapred-sitexml">mapred-site.xml</h4>
+<p>By default, the /usr/local/hadoop/etc/hadoop/ folder contains /usr/local/hadoop/etc/hadoop/mapred-site.xml.template file which must be renamed/copied with the name mapred-site.xml. The mapred-site.xml file is used to specify which framework is being used for MapReduce. We will use the YARN framework.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># copy</span>
+<span class="gp">hduser@hd-single:~$ </span>cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+<span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+<span class="c"># set the following property:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;mapreduce.framework.name&lt;/name&gt;
+    &lt;value&gt;yarn&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="hdfs-sitexml">hdfs-site.xml</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create two directories which will contain</span>
+<span class="c"># the namenode and the datanode for this installation</span>
+<span class="gp">hduser@hd-single:~$ </span>sudo mkdir -p /usr/local/hadoop_store/hdfs/namenode
+<span class="gp">hduser@hd-single:~$ </span>sudo mkdir -p /usr/local/hadoop_store/hdfs/datanode
+
+<span class="c"># change owner of the store</span>
+<span class="gp">hduser@hd-single:~$ </span>sudo chown -R hduser:hadoop /usr/local/hadoop_store
+
+<span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+
+<span class="c"># set the following properties:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;dfs.replication&lt;/name&gt;
+    &lt;value&gt;1&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;
+    &lt;value&gt;file:/usr/local/hadoop_store/hdfs/namenode&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;
+    &lt;value&gt;file:/usr/local/hadoop_store/hdfs/datanode&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.webhdfs.enabled&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="yarn-sitexml">yarn-site.xml</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-single:~$ </span>nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+<span class="c"># set the following property:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+    &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt;
+    &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h2 id="format-hadoop-filesystem">Format Hadoop Filesystem</h2>
+<p>The format command should be issued with write permission since it creates directory under /usr/local/hadoop_store/hdfs/namenode folder.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># format HDFS</span>
+<span class="gp">hduser@hd-single:~$ </span>hadoop namenode -format</code></pre></figure>
+
+<h2 id="start-hadoop-and-verify">Start Hadoop and Verify</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start hdfs:</span>
+<span class="gp">hduser@hd-single:~$ </span>start-dfs.sh
+
+<span class="c"># may see a warning </span>
+<span class="c"># (WARN util.NativeCodeLoader: Unable....using builtin-java classes where applicable)</span>
+<span class="c"># this is ok</span>
+
+<span class="c"># start MapReduce (running on the Yarn)</span>
+<span class="gp">hduser@hd-single:~$ </span>start-yarn.sh
+
+<span class="c"># verify all daemons</span>
+<span class="gp">hduser@hd-single:/usr/local/hadoop/sbin$ </span>jps
+<span class="c"># should see:</span>
+<span class="c">#   Jps</span>
+<span class="c">#   NameNode</span>
+<span class="c">#   SecondaryNameNode</span>
+<span class="c">#   ResourceManager</span>
+<span class="c">#   DataNode</span>
+<span class="c">#   NodeManager</span>
+
+<span class="c"># check Hadoop version</span>
+<span class="gp">hduser@hd-single:~$ </span>hadoop version
+<span class="c"># returns:</span>
+<span class="c">#   Hadoop 2.6.0</span>
+<span class="c">#   Subversion https://git-wip-us.apache.org/repos/asf/hadoop.git -r </span>
+<span class="c">#   e3496499ecb8d220fba99dc5ed4c99c8f9e33bb1</span>
+<span class="c">#   Compiled by jenkins on 2014-11-13T21:10Z</span>
+<span class="c">#   Compiled with protoc 2.5.0</span>
+<span class="c">#   From source with checksum 18e43357c8f927c0695f1e9522859d6a</span>
+<span class="c">#   This command was run using /usr/local/hadoop/share/hadoop/common/hadoop-common-2.6.0.jar</span></code></pre></figure>
+
+<h2 id="hadoop-browser-interfaces">Hadoop Browser Interfaces</h2>
+<p>YARN must be active to access the following default URLs.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>Administration</td>
+      <td>http://hd-single:8088/</td>
+    </tr>
+    <tr>
+      <td>NameNode Status</td>
+      <td>http://hd-single:50070/dfshealth.html#tab-overview</td>
+    </tr>
+    <tr>
+      <td>DataNode Status</td>
+      <td>http://hd-single:50070/dfshealth.html#tab-datanode</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Administration</p>
+<figure><a href="/images/hd-single-01.png"><img src="/images/hd-single-01.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>NameNode Status</p>
+<figure><a href="/images/hd-single-02.png"><img src="/images/hd-single-02.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>DataNode Status</p>
+<figure><a href="/images/hd-single-03.png"><img src="/images/hd-single-03.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>This completes the installation.</p>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>

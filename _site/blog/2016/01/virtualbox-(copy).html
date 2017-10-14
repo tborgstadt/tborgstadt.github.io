@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     VirtualBox 4.3 shared folders setup 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="Setup for using Google Drive with VirtualBox on Ubuntu">
+  <meta name="keywords" content="insync, virtualbox, google drive, ubuntu, shared folders">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="VirtualBox 4.3 shared folders setup &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="Setup for using Google Drive with VirtualBox on Ubuntu">
+  <meta property="og:url" content="0.0.0.0/blog/2016/01/virtualbox-(copy)">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="0.0.0.0/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="0.0.0.0/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Analytics - Data Science</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">I'm an analyst and technologist at heart. This is my journey re-directing into data science.</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2016. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">VirtualBox 4.3 shared folders setup</h1>
+
+    <p class="tag-box inline"><a href="/tags#insync" title="Pages tagged insync" rel="tag">insync</a><a href="/tags#virtualbox" title="Pages tagged virtualbox" rel="tag">virtualbox</a><a href="/tags#google+drive" title="Pages tagged google drive" rel="tag">google drive</a><a href="/tags#ubuntu" title="Pages tagged ubuntu" rel="tag">ubuntu</a><a href="/tags#shared+folders" title="Pages tagged shared folders" rel="tag">shared folders</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2016-01-10">10 Jan 2016</p>
+    <p><a href="/blog/2016/01/virtualbox-(copy)#disqus_thread">Comments</a></p>
+
+    <p>Virtualbox is a valuable tool for prototyping new applications or testing unfamiliar applications without risk to your production host. I use it for these reasons but also to run different operating systems when needed. For example, I have a Windows guest for Microsoft applications that I use. I also use guest machines to stand up development database servers. For example, I have a postgreSQL guest and a MySQL guest.</p>
+
+<p>This post explains how to share a host file folder with a VirtualBox guest. I have also included my experience using insync and Google Drive.</p>
+
+<p>Objectives</p>
+
+<ol>
+  <li>Synchronize select host folders with Google Drive for backup and accessiblity from the web</li>
+  <li>Access selected host folders from a VirtualBox guest(s) as needed</li>
+</ol>
+
+<h3 id="synchronizing-google-drive">Synchronizing Google Drive</h3>
+<p>I use <a href="https://www.insynchq.com/" target="_blank">insync</a> to synchronize folders from Google Drive to my local Ubuntu host. Insync is available for Windows, Mac, and Linux. My experience with insync is very positive. The key features I like include:</p>
+
+<ul>
+  <li>sychronize Google Drive folders from up to 3 separate Google Accounts</li>
+  <li>ability to select exactly which Google Drive folders you want to synchronize</li>
+  <li>it runs on Linux</li>
+  <li>insync is customer focused, interested in feedback and suggestions for their product, not too much but in touch and responsive which is nice</li>
+</ul>
+
+<h3 id="configuring-virtualbox-shared-folders">Configuring VirtualBox Shared Folders</h3>
+
+<p>The following can be done to share any host file folder with a guest. I have shared my synchronized Google Drive folder here only for example.</p>
+
+<h4 id="from-the-virtualbox-host">From the VirtualBox host:</h4>
+
+<ul>
+  <li>Open VirtualBox Manager</li>
+  <li>Select the guest needing access to a host folder (e.g. ‘postgre’)</li>
+  <li>Under settings select ‘Shared Folders’</li>
+  <li>Click on ‘Machine Folders’ and click ‘Add new shared folder definition’</li>
+  <li>Browse to the local path of the desired folder</li>
+  <li>Select ‘Auto-mount’ and ‘Make Permanent’</li>
+  <li>Click ‘OK’ and ‘OK’</li>
+</ul>
+
+<figure><a><img src="/images/vbxshrdfldr1.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<h4 id="from-a-virtualbox-guest">From a VirtualBox guest:</h4>
+
+<ul>
+  <li>Login</li>
+  <li>Add your user to the vbox group</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">tom@postgre:~<span class="nv">$ </span>sudo usermod -aG vboxsf tom </code></pre></figure>
+
+<ul>
+  <li>Logout and log back in</li>
+  <li>Browse to the system ‘/media’ folder and verify the mapped folder is present. By default VirtualBox will mount the shared folder in the ‘/media’ folder with prefix ‘sf_’. We can see it below both from Nautilus and the terminal.</li>
+</ul>
+
+<figure><a><img src="/images/vbxshrdfldr2.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<h4 id="change-the-guest-mount-directory">Change the guest mount directory:</h4>
+
+<p>I prefer to have the shared folder accessbile from my home directory (instead of folder ‘/media’) and this is easily achieved by setting the VirtualBox shared folders mount directory option for the guest using the command line on the host.</p>
+
+<p>From the host:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># Note this is set per guest system, it is not a global setting</span>
+tom@host:~<span class="nv">$ </span>vboxmanage guestproperty <span class="nb">set</span> <span class="s2">&quot;postgre&quot;</span> /VirtualBox/GuestAdd/SharedFolders/MountDir /home/tom</code></pre></figure>
+
+<p>Restart the guest and now the shared folder is available from the home location.</p>
+
+<figure><a><img src="/images/vbxshrdfldr3.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>There you have it.</p>
+
+
+
+    <div id="disqus_thread"></div>
+  </div>
+</article>
+
+
+
+    </div>
+  
+    
+
+<!-- Add Disqus comments. -->
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'tomborgstadtcom'; // required: replace example with your forum shortname
+  var disqus_identifier = "/blog/2016/01/virtualbox-(copy)";
+
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+    
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-71942635-1', 'auto');
+  ga('send', 'pageview', {
+  'page': '/blog/2016/01/virtualbox-(copy)',
+  'title': 'VirtualBox 4.3 shared folders setup'
+  });
+  
+</script>
+
+
+  </body>
+</html>

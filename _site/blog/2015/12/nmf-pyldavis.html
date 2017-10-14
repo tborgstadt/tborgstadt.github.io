@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     NMF Topic Visualization with pyLDAvis (VW Scandal) 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="How to use pyLDAvis with a non-negative matrix factorization topic extraction model.">
+  <meta name="keywords" content="nmf, pyldavis, topic extraction, visualization">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="NMF Topic Visualization with pyLDAvis (VW Scandal) &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="How to use pyLDAvis with a non-negative matrix factorization topic extraction model.">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/12/nmf-pyldavis">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">NMF Topic Visualization with pyLDAvis (VW Scandal)</h1>
+
+    <p class="tag-box inline"><a href="/tags#nmf" title="Pages tagged nmf" rel="tag">nmf</a><a href="/tags#pyldavis" title="Pages tagged pyldavis" rel="tag">pyldavis</a><a href="/tags#topic+extraction" title="Pages tagged topic extraction" rel="tag">topic extraction</a><a href="/tags#visualization" title="Pages tagged visualization" rel="tag">visualization</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-12-18">18 Dec 2015</p>
+
+    <p>Recently I completed a project to extract topics from articles related to the Volkswagen Diesel Scandal. The project utilized Graphlab to model topics and <a href="https://pyldavis.readthedocs.org/en/latest/" target="_blank">pyLDAvis</a> for visualization. As a follow on to the original project, I wanted to see if I could use pyLDAvis with non-negative matrix factorization (NMF) model for topic extraction.</p>
+
+<p>The following code snippet below assumes we have instantiated a vector over our corpus and fitted NMF model. See link to working visualization below.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">################################################</span>
+<span class="c"># Prepare data from NMF and Tfidf for pyLDAvis</span>
+<span class="c">################################################</span>
+
+<span class="c"># topic_term_dists</span>
+<span class="n">topic_term_dists</span> <span class="o">=</span> <span class="n">nmf</span><span class="o">.</span><span class="n">components_</span>  <span class="c"># from NMF model</span>
+
+<span class="c"># normalize topic term vectors required by pyLDAvis</span>
+<span class="k">for</span> <span class="n">topic_idx</span><span class="p">,</span> <span class="n">topic</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">topic_term_dists</span><span class="p">):</span> 
+    <span class="n">topic_term_dists</span><span class="p">[</span><span class="n">topic_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">topic_term_dists</span><span class="p">[</span><span class="n">topic_idx</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">topic_term_dists</span><span class="p">[</span><span class="n">topic_idx</span><span class="p">],</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">topic_term_dists</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">topic_term_dists</span><span class="p">)</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="nb">sum</span><span class="p">()):</span>
+    <span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">'Error - problem with topic term vector normalization'</span><span class="p">)</span>
+
+<span class="c"># doc_topic_dists</span>
+<span class="n">doc_topic</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c"># iterate through all docs in tfidf vector</span>
+<span class="k">for</span> <span class="n">doc_idx</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v_model_array</span><span class="p">):</span>
+    <span class="n">doc_topic_sims</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c"># iterate through all topics from NMF</span>
+    <span class="k">for</span> <span class="n">topic_idx</span><span class="p">,</span> <span class="n">topic</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nmf</span><span class="o">.</span><span class="n">components_</span><span class="p">):</span>  
+        
+        <span class="c"># calculate similarity of topic to document</span>
+        <span class="n">sim_value</span> <span class="o">=</span> <span class="n">cosine_similarity</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">topic</span><span class="p">)</span>        
+        <span class="n">doc_topic_sims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_value</span><span class="p">)</span>
+
+    <span class="n">doc_topic</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">doc_topic_sims</span><span class="p">)</span>
+    
+<span class="n">doc_topic_dists</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">doc_topic</span><span class="p">)</span>
+
+<span class="c"># normalize topic features for each doc required by pyLDAvis</span>
+<span class="k">for</span> <span class="n">doc_idx</span><span class="p">,</span> <span class="n">doc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">doc_topic_dists</span><span class="p">):</span>
+    <span class="n">doc_topic_dists</span><span class="p">[</span><span class="n">doc_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">doc_topic_dists</span><span class="p">[</span><span class="n">doc_idx</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">doc_topic_dists</span><span class="p">[</span><span class="n">doc_idx</span><span class="p">],</span> <span class="nb">ord</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">doc_topic_dists</span><span class="o">.</span><span class="nb">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v_model_array</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">'Error - problem with document topic vector normalization'</span><span class="p">)</span>
+
+<span class="c"># doc_lengths</span>
+<span class="n">doc_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">v_model_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    
+<span class="c"># vocabulary</span>
+<span class="n">vocabulary</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v_model_features</span><span class="p">)</span>
+
+<span class="c"># term_frequency</span>
+<span class="n">term_frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">v_model_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">pyLDAvis_data</span> <span class="o">=</span> <span class="p">{</span><span class="s">'topic_term_dists'</span><span class="p">:</span> <span class="n">topic_term_dists</span><span class="p">,</span> 
+                 <span class="s">'doc_topic_dists'</span><span class="p">:</span>  <span class="n">doc_topic_dists</span><span class="p">,</span>
+                 <span class="s">'doc_lengths'</span><span class="p">:</span>      <span class="n">doc_lengths</span><span class="p">,</span>
+                 <span class="s">'vocab'</span><span class="p">:</span>            <span class="n">vocabulary</span><span class="p">,</span>
+                 <span class="s">'term_frequency'</span><span class="p">:</span>   <span class="n">term_frequency</span><span class="p">}</span>
+<span class="kn">import</span> <span class="nn">pyLDAvis</span>
+<span class="n">pyLDAvis</span><span class="o">.</span><span class="n">enable_notebook</span><span class="p">()</span>
+
+<span class="n">vis_data</span> <span class="o">=</span> <span class="n">pyLDAvis</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="o">**</span><span class="n">pyLDAvis_data</span><span class="p">)</span>
+
+
+<span class="c"># Display the interative visualization</span>
+<span class="n">pyLDAvis</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">vis_data</span><span class="p">)</span></code></pre></figure>
+
+<p>Resulting pyLDAvis topic visualization below. Find the entire working notebook here: <a href="/notebooks/pyLDAvis-on-NMF.html#NMF-Topic-Visualization-with-pyLDAvis" target="_blank">pyLDAvis html interactive notebook</a>.</p>
+<figure><a target="_blank" href="/notebooks/pyLDAvis-on-NMF.html#NMF-Topic-Visualization-with-pyLDAvis"><img src="/images/pyldavis.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>Thanks to Ben Mabey for <a href="http://nbviewer.ipython.org/github/bmabey/pyLDAvis/blob/master/notebooks/pyLDAvis_overview.ipynb" target="_blank">BYOM</a> (bring your own model) information.</p>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>

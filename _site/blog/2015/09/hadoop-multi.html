@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<html lang="en-us">
+
+  <head>
+  <meta name="robots" content="noindex" />
+  
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+     Configure Multi-node Hadoop 2.6 Cluster 
+  </title>
+
+  <meta name="author" content="Tom Borgstadt">
+  <link rel="author" href="https://plus.google.com/+TomBorgstadt" title="Tom Borgstadt on Google+" />
+  <meta name="description" content="How to expand a Hadoop 2.6 single node cluster to a multi-node cluster on Ubuntu with VirtualBox.">
+  <meta name="keywords" content="hadoop, spark, virtualbox, ubuntu">
+  <meta name="viewport" content="width=device-width">
+  
+  <meta property="og:title" content="Configure Multi-node Hadoop 2.6 Cluster &#8211; Tom Borgstadt">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="How to expand a Hadoop 2.6 single node cluster to a multi-node cluster on Ubuntu with VirtualBox.">
+  <meta property="og:url" content="http://blog.tomborgstadt.com/blog/2015/09/hadoop-multi">
+  <meta property="og:site_name" content="Tom Borgstadt">
+  
+
+  <link rel="shortcut icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+  <link href="http://blog.tomborgstadt.com/feed.xml" rel="self" type="application/atom+xml" title="Tom Borgstadt"/>
+  <link href="http://blog.tomborgstadt.com/" rel="alternate" type="text/html"/>
+
+</head>
+
+  
+  <body>
+
+    <div class="sidebar">
+  <div class="container">
+    <div class="sidebar-about">
+        <a href="/"> Tom Borgstadt</a>
+        <p class="tagline">Predictive Analytics</p>
+	<p class="imgatt">        
+            <img src="/images/bombe5.jpg">
+            <a target="_blank" href="https://www.flickr.com/photos/jonnyentropy/5364292247/">"Turing Bombe at Bletchley Park" by Tris Linnell </a>
+            <a target="_blank" href="https://creativecommons.org/licenses/by/2.0/legalcode">(cc2.0)</a>
+        </p>
+        <p class="descript">Data Engineering, Data Mining, and Machine Learning</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-nav-item" href="/">Home</a>
+      
+      
+        
+          
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/about">About</a>
+          
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+          
+            <a class="sidebar-nav-item" href="/tags">Tags</a>
+          
+        
+      
+        
+      
+        
+      
+
+      <div class="sidebar-item">
+          <p>
+          </p>
+          <p class="social-icons">
+            <a target="_blank" href="http://www.linkedin.com/in/tomborgstadt"><i class="fa fa-linkedin fa-2x"></i></a>
+            <a target="_blank" href="http://www.github.com/tborgstadt"><i class="fa fa-github fa-2x"></i></a>
+          <!--<a target="_blank" href="http://twitter.com/"><i class="fa fa-twitter fa-2x"></i></a>-->
+            <a target="_blank" href="/feed.xml"><i class="fa fa-rss fa-2x"></i></a>
+            <a><i class="fa fa-linux fa-2x"></i></a>
+         </p>
+      </div>
+    </nav>
+
+    <p class="copyright">
+      &copy; 2017. All rights reserved.
+    </p>
+  </div>
+
+ </div>
+
+
+    <div class="content container">
+      <article itemscope itemtype="http://schema.org/Article">
+  <div class="post">
+    <h1 itemprop="name" class="post-title">Configure Multi-node Hadoop 2.6 Cluster</h1>
+
+    <p class="tag-box inline"><a href="/tags#hadoop" title="Pages tagged hadoop" rel="tag">hadoop</a><a href="/tags#spark" title="Pages tagged spark" rel="tag">spark</a><a href="/tags#virtualbox" title="Pages tagged virtualbox" rel="tag">virtualbox</a><a href="/tags#ubuntu" title="Pages tagged ubuntu" rel="tag">ubuntu</a></p>
+
+    <p class="post-date" itemprop="datePublished" content="2015-09-15">15 Sep 2015</p>
+
+    <p>This project is the final of a series of 3 posts beginning with the following posts:</p>
+
+<ol>
+  <li><a href="/blog/2015/08/hadoop.html">Install Hadoop 2.6 on Ubuntu 14.04</a></li>
+  <li><a href="/blog/2015/08/hadoop-spark.html">Install Spark 1.5 with Hadoop 2.6</a></li>
+</ol>
+
+<p>The concept is to take a working single node Hadoop cluster with Spark, and expand to 3 nodes, 1 master namenode and 2 slave data worker nodes.</p>
+
+<p>To simplify this project, each node will run as a virtual machine (VM) on a single hosted virtual environment. This makes it easier to build out the cluster. The single node cluster is modified with common configuration to all nodes and then the single node is cloned, wash and repeat to desired number of nodes. VirtualBox 4.3 is the virtualization platform running on Ubuntu 14.04.</p>
+
+<p>In a production environment, it is most likely that a Hadoop cluster would consist of 100s or even 1000s of nodes hosted in various environments, physical and/or virtual. I want to emphasize this project is for academic purposes only.</p>
+
+<ul id="markdown-toc">
+  <li><a href="#plan" id="markdown-toc-plan">Plan</a></li>
+  <li><a href="#create-master-and-apply-common-cluster-configuration" id="markdown-toc-create-master-and-apply-common-cluster-configuration">Create Master and apply common cluster configuration</a>    <ul>
+      <li><a href="#hadoop" id="markdown-toc-hadoop">Hadoop</a>        <ul>
+          <li><a href="#core-sitexml" id="markdown-toc-core-sitexml">core-site.xml</a></li>
+          <li><a href="#hdfs-sitexml" id="markdown-toc-hdfs-sitexml">hdfs-site.xml</a></li>
+          <li><a href="#yarn-sitexml" id="markdown-toc-yarn-sitexml">yarn-site.xml</a></li>
+          <li><a href="#mapred-sitexml" id="markdown-toc-mapred-sitexml">mapred-site.xml</a></li>
+          <li><a href="#set-master-slave-and-worker-nodes-config" id="markdown-toc-set-master-slave-and-worker-nodes-config">set master, slave, and worker nodes config</a></li>
+          <li><a href="#clear-logs" id="markdown-toc-clear-logs">clear logs</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#create-and-configure-slave-nodes" id="markdown-toc-create-and-configure-slave-nodes">Create and configure Slave nodes</a></li>
+  <li><a href="#complete-master-node-configuration" id="markdown-toc-complete-master-node-configuration">Complete Master node configuration</a></li>
+  <li><a href="#test-connectivity-between-nodes" id="markdown-toc-test-connectivity-between-nodes">Test connectivity between nodes</a></li>
+  <li><a href="#format-hdfs" id="markdown-toc-format-hdfs">Format HDFS</a></li>
+  <li><a href="#start-hadoop" id="markdown-toc-start-hadoop">Start Hadoop</a></li>
+  <li><a href="#start-spark" id="markdown-toc-start-spark">Start Spark</a></li>
+  <li><a href="#verify-active-hadoop-and-spark-subsystems" id="markdown-toc-verify-active-hadoop-and-spark-subsystems">Verify active Hadoop and Spark subsystems</a></li>
+  <li><a href="#test" id="markdown-toc-test">Test</a></li>
+  <li><a href="#create-start-and-shutdown-scripts" id="markdown-toc-create-start-and-shutdown-scripts">Create start and shutdown scripts</a></li>
+</ul>
+
+<h2 id="plan">Plan</h2>
+<p>Each node of the hadoop cluster must communicate with other nodes. Since this cluster will run in a virtual environment on a single host the following static IP addresses will be used, yours might be different.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>VM Node(Server)</strong></td>
+      <td><strong>Role</strong></td>
+      <td><strong>IP Address</strong></td>
+    </tr>
+    <tr>
+      <td>hd-master</td>
+      <td>hdfs namenode/spark master</td>
+      <td>192.168.1.100</td>
+    </tr>
+    <tr>
+      <td>hd-slave1</td>
+      <td>hdfs datanode/spark worker</td>
+      <td>192.168.1.101</td>
+    </tr>
+    <tr>
+      <td>hd-slave2</td>
+      <td>hdfs datanode/spark worker</td>
+      <td>192.168.1.102</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="create-master-and-apply-common-cluster-configuration">Create Master and apply common cluster configuration</h2>
+<p>I will begin by cloning the working single cluster VM <strong>hd-spark</strong>, built in previous post, to new VM <strong>hd-master</strong> using the VirtualBox administration GUI. I can save time and have a more consistent implementation if I apply common configuration to the first VM, propogate the common configuration using the cloning process, and then apply specific master and slave configuration later to individual VMs as needed.</p>
+
+<p>Start the new VM <strong>hd-master</strong> and login as administrator (user <strong>tom</strong> in my case).</p>
+
+<p>Note the terminal will still show the server name that <strong>hd-master</strong> was cloned from as show below, but these next steps will correct the host name.</p>
+
+<p>Change hostname.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">tom@hd-spark:~$ </span>sudo nano /etc/hostname
+
+<span class="c"># change hd-spark to hd-master:</span>
+  hd-master
+
+<span class="c"># save</span></code></pre></figure>
+
+<p>Change hosts table</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">tom@hd-spark:~$ </span>sudo nano /etc/hosts
+
+<span class="c"># remove line '127.0.0.1 localhost'</span>
+<span class="c"># set contents of hosts file with:</span>
+    192.168.1.100     hd-master
+    192.168.1.101     hd-slave1
+    192.168.1.102     hd-slave2
+
+<span class="c"># save</span>
+
+<span class="c"># exit terminal</span>
+<span class="gp">tom@hd-master:~$ </span><span class="nb">exit</span></code></pre></figure>
+
+<p>Reopen terminal and login as <strong>hduser</strong>. Note the host name is now correct.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">tom@hd-master:~$ </span>su hduser
+<span class="gp">hduser@hd-master:/home/tom$ </span><span class="nb">cd
+</span>hduser@hd-master:~<span class="err">$</span></code></pre></figure>
+
+<h3 id="hadoop">Hadoop</h3>
+<p>Update the following Hadoop configuration files as specified.</p>
+
+<h4 id="core-sitexml">core-site.xml</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml
+
+<span class="c"># set the following properties:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;fs.default.name&lt;/name&gt;
+    &lt;value&gt;hdfs://hd-master:9000/&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="hdfs-sitexml">hdfs-site.xml</h4>
+<p>Update dfs.replication to 2 as data will be replicated on the 2 slave datanodes. Verify other properties as shown.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+
+<span class="c"># set the following properties:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;dfs.replication&lt;/name&gt;
+    &lt;value&gt;2&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;
+    &lt;value&gt;file:/usr/local/hadoop_store/hdfs/namenode&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;
+    &lt;value&gt;file:/usr/local/hadoop_store/hdfs/datanode&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;dfs.webhdfs.enabled&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="yarn-sitexml">yarn-site.xml</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+<span class="c"># set the following properties:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+    &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.nodemanager.aux-services.mapreduce.shuffle.class&lt;/name&gt;
+    &lt;value&gt;org.apache.hadoop.mapred.ShuffleHandler&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.resourcemanager.resource-tracker.address&lt;/name&gt;
+    &lt;value&gt;hd-master:8025&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;
+    &lt;value&gt;hd-master:8035&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;yarn.resourcemanager.address&lt;/name&gt;
+    &lt;value&gt;hd-master:8050&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="mapred-sitexml">mapred-site.xml</h4>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+<span class="c"># set the following properties:</span>
+&lt;configuration&gt;
+
+  &lt;property&gt;
+    &lt;name&gt;mapred.job.tracker&lt;/name&gt;
+    &lt;value&gt;hd-master:5431&lt;/value&gt;
+  &lt;/property&gt;
+  &lt;property&gt;
+    &lt;name&gt;mapred.framework.name&lt;/name&gt;
+    &lt;value&gt;yarn&lt;/value&gt;
+  &lt;/property&gt;
+
+&lt;/configuration&gt;
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="set-master-slave-and-worker-nodes-config">set master, slave, and worker nodes config</h4>
+<p>The single master node, <strong>hd-master</strong> will have both primary and secondary HDFS NameNodes. Note that SecondaryNameNode is not really a clone for the NameNode, it is meant to periodically retrieve the NameNode data from memory and persist it on the drive.</p>
+
+<p>List master node for Hadoop in masters config file.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/masters
+
+<span class="c"># add master node name:</span>
+    hd-master
+
+<span class="c"># save</span></code></pre></figure>
+
+<p>List slave nodes for Hadoop in slaves config file.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/hadoop/etc/hadoop/slaves
+
+<span class="c"># add slave nodes names:</span>
+    hd-slave1
+    hd-slave2
+
+<span class="c"># save</span></code></pre></figure>
+
+<p>List slave workers for Spark in slaves file.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># copy the template </span>
+<span class="gp">hduser@hd-master:~$ </span>sudo cp /usr/local/spark/conf/slaves.template slaves
+
+<span class="c"># edit the file</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano /usr/local/spark/conf/slaves
+
+<span class="c"># add slave workers names:</span>
+    hd-slave1
+    hd-slave2
+
+<span class="c"># save</span></code></pre></figure>
+
+<h4 id="clear-logs">clear logs</h4>
+<p>Since the single node cluster, <strong>hd-master</strong>, was run previously clear the logs before cloning.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># remove all files in logs folder</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo rm -rf /usr/local/hadoop/logs</code></pre></figure>
+
+<h2 id="create-and-configure-slave-nodes">Create and configure Slave nodes</h2>
+<p>Clone VirtualBox <strong>hd-master</strong> to <strong>hd-slave1</strong> using the VirtualBox manager.</p>
+
+<p>Again, at this point note the terminal will show the server name that <strong>hd-slave1</strong> was cloned from as show below, but these next steps will correct the host name.</p>
+
+<p>Update hostname file with server name.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit file</span>
+<span class="gp">tom@hd-master:~$ </span>sudo nano /etc/hostname
+
+<span class="c"># update server name:</span>
+    hd-slave1
+
+<span class="c"># save</span>
+
+<span class="c"># shutdown for network config</span>
+<span class="gp">tom@hd-master:~$ </span>sudo shutdown -P now</code></pre></figure>
+
+<p>From VirtualBox manager, configure a network adapter for VM <strong>hd-slave1</strong>.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>VBox</strong></td>
+      <td><strong>Attached to:</strong></td>
+      <td><strong>Purpose</strong></td>
+    </tr>
+    <tr>
+      <td>Adapter 1:</td>
+      <td>Bridged Adapter</td>
+      <td>for static IP (for HDFS)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>From Ubuntu create an IPv4 Ethernet network connection with the following configuration and assign to the adapter made available by VirtualBox.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>VBox</strong></td>
+      <td><strong>Ubuntu</strong></td>
+      <td><strong>Type</strong></td>
+      <td><strong>IP</strong></td>
+      <td><strong>Netmask</strong></td>
+      <td><strong>Gateway</strong></td>
+    </tr>
+    <tr>
+      <td>Adapter2:</td>
+      <td>eth0:</td>
+      <td>Manual</td>
+      <td>192.168.1.101</td>
+      <td>255.255.255.0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Repeat steps in this section for additional slave(s), in this case <strong>hd-slave2</strong> with IP: 192.168.1.102</p>
+
+<h2 id="complete-master-node-configuration">Complete Master node configuration</h2>
+<p>To have Internet connectivity for downloads, etc., it is necessary to configure two network adapters. This is done on the <strong>hd-master</strong> node only but could also be done on slave nodes if needed.</p>
+
+<p>From VirtualBox manager UI, configure 2 network adapters as show below for VM <strong>hd-master</strong>.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>VBox</strong></td>
+      <td><strong>Attached to:</strong></td>
+      <td><strong>Purpose</strong></td>
+    </tr>
+    <tr>
+      <td>Adapter1:</td>
+      <td>NAT</td>
+      <td>for Internet access</td>
+    </tr>
+    <tr>
+      <td>Adapter2:</td>
+      <td>Bridged Adapter</td>
+      <td>for static IP</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>From Ubuntu create 2 IPv4 Ethernet network connections and assign to the adapters made available by VirtualBox.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>VBox</strong></td>
+      <td><strong>Ubuntu</strong></td>
+      <td><strong>Type</strong></td>
+      <td><strong>IP</strong></td>
+      <td><strong>Netmask</strong></td>
+      <td><strong>Gateway</strong></td>
+    </tr>
+    <tr>
+      <td>Adapter1:</td>
+      <td>eth1:</td>
+      <td>DHCP</td>
+      <td>n/a</td>
+      <td>n/a</td>
+      <td>n/a</td>
+    </tr>
+    <tr>
+      <td>Adapter2:</td>
+      <td>eth0:</td>
+      <td>Manual</td>
+      <td>192.168.1.100</td>
+      <td>255.255.255.0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="test-connectivity-between-nodes">Test connectivity between nodes</h2>
+<p>Ensure all nodes in the cluster can communicate with other nodes.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">hduser@hd-master:~$ </span>ping hd-slave1
+<span class="c"># should return:</span>
+<span class="c">#   Reply from 192.168.1.101</span>
+<span class="c">#   cntrl-c to break</span>
+
+<span class="gp">hduser@hd-master:~$ </span>ping hd-slave2
+<span class="c"># should return:</span>
+<span class="c">#   Reply from 192.168.1.102</span>
+<span class="c">#   cntrl-c to break</span>
+
+<span class="gp">hduser@hd-slave1:~$ </span>ping hd-master
+<span class="c"># should return:</span>
+<span class="c">#   Reply from 192.168.1.100</span>
+<span class="c">#   cntrl-c to break</span>
+
+<span class="gp">hduser@hd-slave2:~$ </span>ping hd-master
+<span class="c"># should return:</span>
+<span class="c">#   Reply from 192.168.1.100</span>
+<span class="c">#   cntrl-c to break</span></code></pre></figure>
+
+<p>Ensure all nodes can ssh into other nodes without password prompt.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">hduser@hd-master:/home/tom$ </span>ssh hd-slave1
+<span class="c"># result:</span>
+hduser@hd-slave1:~<span class="err">$</span>
+
+<span class="gp">hduser@hd-slave1:/home/tom$ </span>ssh hd-master
+<span class="c"># result:</span>
+hduser@hd-master:~<span class="err">$</span>
+
+<span class="gp">hduser@hd-slave2:/home/tom$ </span>ssh hd-master
+<span class="c"># result:</span>
+hduser@hd-master:~<span class="err">$</span></code></pre></figure>
+
+<h2 id="format-hdfs">Format HDFS</h2>
+<p>Format the namenode and HDFS. If prompted to re-format, answer yes.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">hduser@hd-master:~$ </span>hadoop namenode -format</code></pre></figure>
+
+<p>If a problem with the formatting procedure, compare the “clusterID= “ in each of the following files (these paths can be found by looking in hdfs-site.xml).  The clusterID must be the same in each of these files across master and slaves. If clusterID is different between these files, copy the clusterID from the namenode VERSION file to the datanode VERSION file and save. If these are different the datanodes will not start.</p>
+
+<p>Also ensure that the datanodeUuid is unique by slave, if not, make unique.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>nano /usr/local/hadoop_store/hdfs/namenode/current/VERSION
+<span class="gp">$ </span>nano /usr/local/hadoop_store/hdfs/datanode/current/VERSION</code></pre></figure>
+
+<h2 id="start-hadoop">Start Hadoop</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start Hadoop daemons</span>
+<span class="gp">hduser@hd-master:~$ </span>start-dfs.sh
+
+<span class="c"># start MapReduce daemons: </span>
+<span class="gp">hduser@hd-master:~$ </span>start-yarn.sh
+
+<span class="c"># verify Hadoop daemons on Master:</span>
+<span class="gp">hduser@hd-master:~$ </span>jps
+<span class="c"># should see: NameNode, SecondaryNameNode, Jps, ResourceManager</span>
+
+<span class="c"># verify Hadoop daemons on Slaves:</span>
+<span class="gp">hduser@hd-slave1:~$ </span>jps
+<span class="gp">hduser@hd-slave2:~$ </span>jps
+<span class="c"># should see for each: Jps, NodeManager, DataNode</span></code></pre></figure>
+
+<h2 id="start-spark">Start Spark</h2>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start Spark master</span>
+<span class="gp">hduser@hd-master-spk:~$ </span>start-master.sh
+
+<span class="c"># start Spark workers</span>
+<span class="gp">hduser@hd-master-spk:~$ </span>start-slaves.sh</code></pre></figure>
+
+<h2 id="verify-active-hadoop-and-spark-subsystems">Verify active Hadoop and Spark subsystems</h2>
+
+<p>Check Spark Master web UI:  http://hd-master:8080/</p>
+
+<figure><a href="/images/hd-master-02.png"><img src="/images/hd-master-02.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>Check Hadoop web UI:  http://hd-master:50070/</p>
+
+<figure><a href="/images/hd-master-03.png"><img src="/images/hd-master-03.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<figure><a href="/images/hd-master-04.png"><img src="/images/hd-master-04.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<p>Checking jps on each node shows Spark Master and Worker systems are now included.</p>
+
+<figure><a href="/images/hd-master-01.png"><img src="/images/hd-master-01.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<h2 id="test">Test</h2>
+
+<p>Create text file and put on hdfs /myhdfs/mytext</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create text file</span>
+<span class="gp">hduser@hd-master:~$  </span>nano mytext
+
+<span class="c"># paste in any text</span>
+
+<span class="c"># save</span>
+
+<span class="c"># create a new directory in HDFS</span>
+<span class="gp">hduser@hd-master:~$  </span>hadoop fs -mkdir /myhdfs
+
+<span class="c"># copy the local file into HDFS</span>
+<span class="gp">hduser@hd-master:~$  </span>hadoop fs -put mytext /myhdfs/mytext</code></pre></figure>
+
+<p>Start pyspark shell</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># start pyspark shell</span>
+<span class="gp">hduser@hd-master:~$ </span>pyspark</code></pre></figure>
+
+<p>Enter the following python code to perform a line count and word count of the text file created above. See if the results make sense based on the text in the file.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="o">&gt;&gt;&gt;</span> <span class="n">lines</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">textFile</span><span class="p">(</span><span class="s">'hdfs://hd-master:9000/myhdfs/mytext'</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lines_nonempty</span> <span class="o">=</span> <span class="n">lines</span><span class="o">.</span><span class="nb">filter</span><span class="p">(</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lines_nonempty</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="mi">3</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">words</span> <span class="o">=</span> <span class="n">lines_nonempty</span><span class="o">.</span><span class="n">flatMap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">wordcounts</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">reduceByKey</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span><span class="o">.</span><span class="n">sortByKey</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">wordcounts</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="p">[(</span><span class="mi">20</span><span class="p">,</span> <span class="s">u'the'</span><span class="p">),</span> <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="s">u'in'</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="s">u'and'</span><span class="p">),</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="s">u'a'</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s">u'was'</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s">u'of'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'to'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'Minneapolis'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'for'</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">u'It'</span><span class="p">)]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">quit</span><span class="p">()</span></code></pre></figure>
+
+<p>Verify can access text document via WebHDFS:</p>
+
+<figure><a href="/images/hd-master-05.png"><img src="/images/hd-master-05.png" /></a>
+<figcaption></figcaption>
+</figure>
+
+<table>
+  <tbody>
+    <tr>
+      <td>http://hd-master:50070/webhdfs/v1/myhdfs/mytext?op=OPEN</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Should get a prompt to “Save File”</p>
+
+<h2 id="create-start-and-shutdown-scripts">Create start and shutdown scripts</h2>
+<p>Need some wrappers to start and stop this whole thing.</p>
+
+<p>Add /home/hduser/bin to system PATH</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># edit user startup</span>
+<span class="gp">hduser@hd-master:~$ </span>sudo nano ~/.bashrc 
+
+<span class="c"># append the following line:</span>
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">"/home/hduser/bin:</span><span class="nv">$PATH</span><span class="s2">"</span>
+
+<span class="c"># save</span>
+
+<span class="c"># reset</span>
+<span class="gp">hduser@hd-master:~$ </span><span class="nb">source</span> ~/.bashrc</code></pre></figure>
+
+<p>Add a startup script.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create bin directory</span>
+<span class="gp">hduser@hd-master:~$ </span>mkdir bin
+
+<span class="c"># make bin current directory</span>
+<span class="gp">hduser@hd-master:~$ </span><span class="nb">cd </span>bin
+
+<span class="c"># create a file in bin</span>
+<span class="gp">hduser@hd-master:~/bin$ </span>sudo nano start-env.sh
+
+<span class="c"># copy the following lines into the file:</span>
+    <span class="c">#!/bin/bash</span>
+
+    <span class="c"># start HDFS</span>
+    start-dfs.sh
+
+    <span class="c"># start MapReduce</span>
+    start-yarn.sh
+
+    <span class="c"># start Spark</span>
+    start-master.sh
+    start-slaves.sh
+
+<span class="c"># save</span>
+
+<span class="c"># make the file executable</span>
+<span class="gp">hduser@hd-master:~/bin$ </span>sudo chmod +x start-env.sh</code></pre></figure>
+
+<p>Add a shutdown script.</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># create a file in bin</span>
+<span class="gp">hduser@hd-master:~/bin$ </span>sudo nano stop-env.sh
+
+<span class="c"># copy the following lines into the file:</span>
+    <span class="c">#!/bin/bash</span>
+
+    <span class="c"># stop Spark</span>
+    stop-slaves.sh
+    stop-master.sh
+
+    <span class="c"># stop MapReduce</span>
+    stop-yarn.sh
+
+    <span class="c"># stop HDFS</span>
+    stop-dfs.sh
+
+<span class="c"># save</span>
+
+<span class="c"># make the file executable</span>
+<span class="gp">hduser@hd-master:~/bin$ </span>sudo chmod +x stop-env.sh</code></pre></figure>
+
+<p>This concludes this little project!</p>
+
+
+
+  </div>
+</article>
+
+
+
+    </div>
+  
+  </body>
+</html>
