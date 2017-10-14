@@ -19,10 +19,10 @@ My endeavor is to redirect my career into a more data centric path that effectiv
   * Customer Service
 * Sales & Marketing
 * E-commerce
-* Web Analytics
+* Digital Web
 * Information Technology
 
-#### Education
+#### Education:
 
 **Masters of Science degree in Business Intelligence and Analytics**
 <br>[Rockhurst University](http://ww2.rockhurst.edu/helzberg/msbia){:target="_blank"}
@@ -36,7 +36,7 @@ Emphasis areas:
 * Big Data Strategies
 
 Technologies:
-Linux, Python, R, Scikit-learn, Pyspark-mllib, Spark, Hadoop (HDFS and Hive), Vertica, MySQL, Postgres, MongoDB
+Linux, Python, R, Scikit-learn, Pyspark-mllib, Spark, Hadoop (HDFS and Hive), Vertica, MySQL, Postgres
 
 **Bachelors of Science degree in Computer Science**
 <br>[University of Missouri](http://missouri.edu/){:target="_blank"}
@@ -46,5 +46,4 @@ Emphasis areas:
 * Digital Design
 * Operating Systems
 * Automata Theory and Compilers
-* Engineering
 
