@@ -7,8 +7,8 @@ comments: True
 ---
 This project is the final of a series of 3 posts beginning with the following posts:
 
-1. [Install Hadoop 2.6 on Ubuntu 14.04](/blog/2015/08/hadoop.html)
-2. [Install Spark 1.5 with Hadoop 2.6](/blog/2015/08/hadoop-spark.html)
+1. [Install Hadoop 2.6 on Ubuntu 14.04](/blog/2015/08/15/hadoop.html)
+2. [Install Spark 1.5 with Hadoop 2.6](/blog/2015/08/23/hadoop-spark.html)
 
 The concept is to take a working single node Hadoop cluster with Spark, and expand to 3 nodes, 1 master namenode and 2 slave data worker nodes.
 
