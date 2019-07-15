@@ -1,4 +1,4 @@
-# Jekyll source for blog.tomborgstadt.com
+# Jekyll source for https://blog.tomborgstadt.com
 
 This is a Hyde/Poole themed site with small modifications. A tag page by Michael Lanyon was used and modified to implement a simple tag filtering page compatible with Github hosting.
 
